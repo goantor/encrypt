@@ -100,6 +100,14 @@ func (k *Keys) PublicKey() (publicKey *rsa.PublicKey, err error) {
 	return k.parsedPubKey, err
 }
 
+type IRsa interface {
+	Encrypt(content []byte) ([]byte, error)
+	Decrypt(decrypted []byte) ([]byte, error)
+
+	MakeSign(hash crypto.Hash, content []byte) (string, error)
+	CheckSign(hash crypto.Hash, content []byte, sign string) (err error)
+}
+
 type ersa struct {
 	key  *Keys
 	hash crypto.Hash
