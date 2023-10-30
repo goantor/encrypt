@@ -42,10 +42,12 @@ var (
 
 	noPadding    = &NoPadding{}
 	pkcs7Padding = &Pkcs7Padding{}
+	zeroPadding  = &ZeroPadding{}
 )
 
 type IPaddingType interface {
 	NoPadding() IEncrypt
+	ZeroPadding() IEncrypt
 	Pkcs5Padding() IEncrypt
 	Pkcs7Padding() IEncrypt
 }
@@ -105,6 +107,11 @@ func (a *Base) Decrypt(bytes []byte) (dst []byte, err error) {
 //}
 
 func (a *Base) NoPadding() IEncrypt {
+	a.padding = noPadding
+	return a
+}
+
+func (a *Base) ZeroPadding() IEncrypt {
 	a.padding = noPadding
 	return a
 }

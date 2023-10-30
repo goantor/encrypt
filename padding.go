@@ -29,18 +29,26 @@ func (n NoPadding) Restore(src []byte, blockSize int) []byte {
 	}
 
 	return src[:size+1]
+}
 
-	//start := (len(src)/blockSize - 1) * blockSize
-	//end := make([]byte, 0)
-	//for _, v := range src[start:] {
-	//	if v == byte(0) {
-	//		break
-	//	}
+type ZeroPadding struct {
+}
 
-	//end = append(end, v)
-	//}
+func (z ZeroPadding) Fill(src []byte, blockSize int) []byte {
+	padding := blockSize - len(src)%blockSize
+	padText := make([]byte, len(src)+padding)
+	copy(padText, src)
+	return padText
+}
 
-	//return append(src[:start], end...)
+func (z ZeroPadding) Restore(src []byte, blockSize int) []byte {
+	// Find the last non-zero byte
+	for i := len(src) - 1; i >= 0; i-- {
+		if src[i] != 0 {
+			return src[:i+1]
+		}
+	}
+	return nil
 }
 
 type Pkcs7Padding struct {
