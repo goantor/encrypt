@@ -112,7 +112,7 @@ func (a *Base) NoPadding() IEncrypt {
 }
 
 func (a *Base) ZeroPadding() IEncrypt {
-	a.padding = noPadding
+	a.padding = zeroPadding
 	return a
 }
 
