@@ -54,6 +54,7 @@ type IPaddingType interface {
 }
 
 type IWrapType interface {
+	Base64Safe() IEncrypt
 	Base64() IEncrypt
 	Hex() IEncrypt
 }
