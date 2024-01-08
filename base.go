@@ -37,8 +37,9 @@ var (
 	ErrPaddingSize = errors.New("padding size invalid")
 	ErrKeyLength   = errors.New("key length invalid")
 
-	base64Wrap = &Base64Wrap{}
-	hexWrap    = &HexWrap{}
+	base64Wrap     = &Base64Wrap{}
+	base64SafeWrap = &Base64SafeWrap{}
+	hexWrap        = &HexWrap{}
 
 	noPadding    = &NoPadding{}
 	pkcs7Padding = &Pkcs7Padding{}
@@ -124,6 +125,11 @@ func (a *Base) Pkcs5Padding() IEncrypt {
 
 func (a *Base) Pkcs7Padding() IEncrypt {
 	a.padding = pkcs7Padding
+	return a
+}
+
+func (a *Base) Base64Safe() IEncrypt {
+	a.wrap = base64SafeWrap
 	return a
 }
 

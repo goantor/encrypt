@@ -3,11 +3,45 @@ package encrypt
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"strings"
 )
 
 type IWrap interface {
 	Encode([]byte) []byte
 	Decode([]byte) ([]byte, error)
+}
+
+type Base64SafeWrap struct {
+}
+
+func (b Base64SafeWrap) Encode(bytes []byte) (dst []byte) {
+	str := string(bytes)
+	str = strings.Replace(str, "+", "-", -1)
+	str = strings.Replace(str, "/", "_", -1)
+
+	bs := []byte(str)
+	dst = make([]byte, base64.StdEncoding.EncodedLen(len(bs)))
+	base64.StdEncoding.Encode(dst, bs)
+	return
+}
+
+func (b Base64SafeWrap) Decode(bytes []byte) (dst []byte, err error) {
+	var index int
+	str := string(bytes)
+	str = strings.Replace(str, "-", "+", -1)
+	str = strings.Replace(str, "_", "/", -1)
+	mod4 := len(str) % 4
+	if mod4 != 0 {
+		str = str + "===="[0:mod4]
+	}
+
+	bs := []byte(str)
+	dst = make([]byte, base64.StdEncoding.EncodedLen(len(bs)))
+	if index, err = base64.StdEncoding.Decode(dst, bs); err != nil {
+		return
+	}
+
+	return dst[:index], nil
 }
 
 type Base64Wrap struct {
