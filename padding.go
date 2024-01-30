@@ -55,19 +55,15 @@ type Pkcs7Padding struct {
 }
 
 func (p Pkcs7Padding) Fill(src []byte, blockSize int) []byte {
-	surplus := len(src) % blockSize
-	if surplus == 0 {
-		return src
-	}
-
-	times := blockSize - surplus
-	return append(src, bytes.Repeat([]byte{byte(times)}, times)...)
+	padding := blockSize - len(src)%blockSize
+	padText := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(src, padText...)
 }
 
 func (p Pkcs7Padding) Restore(src []byte, blockSize int) []byte {
 	length := len(src)
-	max := length - int(src[length-1])
-	return src[:max]
+	maxIndex := length - int(src[length-1])
+	return src[:maxIndex]
 }
 
 type Pkcs5Padding struct {
