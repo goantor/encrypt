@@ -15,13 +15,12 @@ type Base64SafeWrap struct {
 }
 
 func (b Base64SafeWrap) Encode(bytes []byte) (dst []byte) {
-	str := string(bytes)
+	dst = make([]byte, base64.StdEncoding.EncodedLen(len(bytes)))
+	base64.StdEncoding.Encode(dst, bytes)
+	str := string(dst)
 	str = strings.Replace(str, "+", "-", -1)
 	str = strings.Replace(str, "/", "_", -1)
-
-	bs := []byte(str)
-	dst = make([]byte, base64.StdEncoding.EncodedLen(len(bs)))
-	base64.StdEncoding.Encode(dst, bs)
+	dst = []byte(str)
 	return
 }
 
