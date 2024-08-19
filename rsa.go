@@ -33,6 +33,13 @@ type Keys struct {
 	parsedPriKey *rsa.PrivateKey
 }
 
+func NewInitKeys(privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey) *Keys {
+	return &Keys{
+		parsedPriKey: privateKey,
+		parsedPubKey: publicKey,
+	}
+}
+
 func NewKeys(privateKey []byte, publicKey []byte, way RsaWay) *Keys {
 	return &Keys{
 		privateKey: formatKey([]byte(`PRIVATE KEY`), privateKey),
@@ -72,7 +79,7 @@ func (k *Keys) PrivateKey() (key *rsa.PrivateKey, err error) {
 
 			var ok bool
 			if k.parsedPriKey, ok = keyInf.(*rsa.PrivateKey); !ok {
-				err = fmt.Errorf("key type %v not supported pkcs8")
+				err = fmt.Errorf("key type %v not supported pkcs8", p.Type)
 			}
 		default:
 			err = fmt.Errorf("key type not supported")
@@ -106,6 +113,12 @@ type IRsa interface {
 
 	MakeSign(hash crypto.Hash, content []byte) (string, error)
 	CheckSign(hash crypto.Hash, content []byte, sign string) (err error)
+
+	LongContentEncrypt(data []byte) ([]byte, error)
+	LongContentDecrypt(data []byte) ([]byte, error)
+
+	LongContentEncryptBase64(data []byte) (string, error)
+	LongContentDecryptBase64(decryptText string) ([]byte, error)
 }
 
 type ersa struct {
@@ -182,4 +195,83 @@ func (r *ersa) CheckSign(hash crypto.Hash, content []byte, sign string) (err err
 
 	hashed := r.algo(hash, content)
 	return rsa.VerifyPKCS1v15(pubKey, hash, hashed, signature)
+}
+
+func (r *ersa) LongContentEncrypt(data []byte) ([]byte, error) {
+	// pkcs1v15 明文消息不能超过密钥大小，并且默认会填充 11 字节，例: 密钥大小 256，明文最大长度为 256-11 = 245
+	pubKey, err := r.key.PublicKey()
+	if err != nil {
+		return nil, err
+	}
+
+	step := pubKey.Size() - 11
+
+	var encryptList []string
+	for i := 0; i < len(data); i += step {
+		end := i + step
+		if end > len(data) {
+			end = len(data)
+		}
+
+		src := data[i:end] // 分段数据大小 0～244  245～489，  490~734
+		//加密
+		encryptPKCS1v15, err := rsa.EncryptPKCS1v15(rand.Reader, pubKey, src)
+		if err != nil {
+			return nil, err
+		}
+		encryptList = append(encryptList, string(encryptPKCS1v15))
+	}
+
+	encryptData := ""
+	for _, encrypted := range encryptList {
+		encryptData += encrypted
+	}
+
+	return []byte(encryptData), nil
+}
+
+func (r *ersa) LongContentDecrypt(data []byte) ([]byte, error) {
+	prik, err := r.key.PrivateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	step := prik.Size()
+	var resultList []byte
+	for i := 0; i < len(data); i += step {
+		end := i + step
+		if end > len(data) {
+			end = len(data)
+		}
+
+		src := data[i:end] // 分段数据大小 0～244  245～489，  490~734
+
+		//解密
+		decryptPKCS1v15, err := rsa.DecryptPKCS1v15(rand.Reader, prik, src)
+
+		if err != nil {
+			return nil, err
+		}
+		resultList = append(resultList, decryptPKCS1v15...)
+	}
+
+	return resultList, nil
+}
+
+func (r *ersa) LongContentEncryptBase64(data []byte) (string, error) {
+	encrypt, err := r.LongContentEncrypt(data)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(encrypt), nil
+}
+
+func (r *ersa) LongContentDecryptBase64(decryptText string) ([]byte, error) {
+	decodeString, err := base64.StdEncoding.DecodeString(decryptText)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.LongContentDecrypt(decodeString)
 }
