@@ -203,10 +203,9 @@ func (r *ersa) LongContentEncrypt(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	step := pubKey.Size() - 11
 
-	var encryptList []string
+	var encryptList []byte
 	for i := 0; i < len(data); i += step {
 		end := i + step
 		if end > len(data) {
@@ -219,15 +218,10 @@ func (r *ersa) LongContentEncrypt(data []byte) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		encryptList = append(encryptList, string(encryptPKCS1v15))
+		encryptList = append(encryptList, encryptPKCS1v15...)
 	}
 
-	encryptData := ""
-	for _, encrypted := range encryptList {
-		encryptData += encrypted
-	}
-
-	return []byte(encryptData), nil
+	return encryptList, nil
 }
 
 func (r *ersa) LongContentDecrypt(data []byte) ([]byte, error) {
