@@ -8,7 +8,7 @@ package encrypt
 //	}
 //}
 //
-//// OFB TODO 这个有问题。 解析的不对。
+////  OFB TODO 这个有问题。 解析的不对。
 //type OFB struct {
 //	*Base
 //	iv []byte
