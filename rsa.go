@@ -111,6 +111,9 @@ type IRsa interface {
 	Encrypt(content []byte) ([]byte, error)
 	Decrypt(decrypted []byte) ([]byte, error)
 
+	SafeEncrypt(content []byte) ([]byte, error)
+	SafeDecrypt(decrypted []byte) ([]byte, error)
+
 	MakeSign(hash crypto.Hash, content []byte) (string, error)
 	CheckSign(hash crypto.Hash, content []byte, sign string) (err error)
 
@@ -154,6 +157,37 @@ func (r *ersa) Decrypt(decrypted []byte) ([]byte, error) {
 
 	buf := make([]byte, base64.StdEncoding.DecodedLen(len(decrypted)))
 	n, err := base64.StdEncoding.Decode(buf, decrypted)
+	if err != nil {
+		return nil, err
+	}
+
+	return rsa.DecryptPKCS1v15(rand.Reader, priKey, buf[:n])
+}
+
+func (r *ersa) SafeEncrypt(content []byte) ([]byte, error) {
+	pub, err := r.key.PublicKey()
+	if err != nil {
+		return nil, err
+	}
+
+	encrypted, err := rsa.EncryptPKCS1v15(rand.Reader, pub, content)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	ret := make([]byte, base64.RawURLEncoding.EncodedLen(len(encrypted)))
+	base64.RawURLEncoding.Encode(ret, encrypted)
+	return ret, nil
+}
+
+func (r *ersa) SafeDecrypt(decrypted []byte) ([]byte, error) {
+	priKey, err := r.key.PrivateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	buf := make([]byte, base64.RawURLEncoding.DecodedLen(len(decrypted)))
+	n, err := base64.RawURLEncoding.Decode(buf, decrypted)
 	if err != nil {
 		return nil, err
 	}
