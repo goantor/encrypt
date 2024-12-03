@@ -117,6 +117,9 @@ type IRsa interface {
 	MakeSign(hash crypto.Hash, content []byte) (string, error)
 	CheckSign(hash crypto.Hash, content []byte, sign string) (err error)
 
+	MakeSafeSign(hash crypto.Hash, content []byte) (string, error)
+	CheckSafeSign(hash crypto.Hash, content []byte, sign string) (err error)
+
 	LongContentEncrypt(data []byte) ([]byte, error)
 	LongContentDecrypt(data []byte) ([]byte, error)
 
