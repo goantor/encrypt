@@ -217,6 +217,36 @@ func (r *ersa) algo(hash crypto.Hash, content []byte) []byte {
 }
 
 func (r *ersa) CheckSign(hash crypto.Hash, content []byte, sign string) (err error) {
+	signature, err := base64.RawURLEncoding.DecodeString(sign)
+	if err != nil {
+		return
+	}
+
+	pubKey, err := r.key.PublicKey()
+	if err != nil {
+		return
+	}
+
+	hashed := r.algo(hash, content)
+	return rsa.VerifyPKCS1v15(pubKey, hash, hashed, signature)
+}
+
+func (r *ersa) MakeSafeSign(hash crypto.Hash, content []byte) (string, error) {
+	priKey, err := r.key.PrivateKey()
+	if err != nil {
+		return "", err
+	}
+
+	hashed := r.algo(hash, content)
+	b, err := rsa.SignPKCS1v15(rand.Reader, priKey, hash, hashed)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.RawURLEncoding.EncodeToString(b), err
+}
+
+func (r *ersa) CheckSafeSign(hash crypto.Hash, content []byte, sign string) (err error) {
 	signature, err := base64.StdEncoding.DecodeString(sign)
 	if err != nil {
 		return
