@@ -125,6 +125,9 @@ type IRsa interface {
 
 	LongContentEncryptBase64(data []byte) (string, error)
 	LongContentDecryptBase64(decryptText string) ([]byte, error)
+
+	LongContentEncryptSafeBase64(data []byte) (string, error)
+	LongContentDecryptSafeBase64(decryptText string) ([]byte, error)
 }
 
 type ersa struct {
@@ -330,6 +333,24 @@ func (r *ersa) LongContentEncryptBase64(data []byte) (string, error) {
 
 func (r *ersa) LongContentDecryptBase64(decryptText string) ([]byte, error) {
 	decodeString, err := base64.StdEncoding.DecodeString(decryptText)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.LongContentDecrypt(decodeString)
+}
+
+func (r *ersa) LongContentEncryptSafeBase64(data []byte) (string, error) {
+	encrypt, err := r.LongContentEncrypt(data)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.RawURLEncoding.EncodeToString(encrypt), nil
+}
+
+func (r *ersa) LongContentDecryptSafeBase64(decryptText string) ([]byte, error) {
+	decodeString, err := base64.RawURLEncoding.DecodeString(decryptText)
 	if err != nil {
 		return nil, err
 	}
