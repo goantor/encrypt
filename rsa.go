@@ -220,7 +220,7 @@ func (r *ersa) algo(hash crypto.Hash, content []byte) []byte {
 }
 
 func (r *ersa) CheckSign(hash crypto.Hash, content []byte, sign string) (err error) {
-	signature, err := base64.RawURLEncoding.DecodeString(sign)
+	signature, err := base64.StdEncoding.DecodeString(sign)
 	if err != nil {
 		return
 	}
@@ -250,7 +250,7 @@ func (r *ersa) MakeSafeSign(hash crypto.Hash, content []byte) (string, error) {
 }
 
 func (r *ersa) CheckSafeSign(hash crypto.Hash, content []byte, sign string) (err error) {
-	signature, err := base64.StdEncoding.DecodeString(sign)
+	signature, err := base64.RawURLEncoding.DecodeString(sign)
 	if err != nil {
 		return
 	}
